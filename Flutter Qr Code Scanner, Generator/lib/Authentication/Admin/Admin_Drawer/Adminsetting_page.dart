@@ -164,10 +164,6 @@ class _AdminSettingPageState extends State<AdminSettingPage> {
                   print('Confirm Password: ${confirmPasswordController.text}');
                   print('Profile Image Path: $profileImagePath');
 
-                  // Use the AdminService to update the admin's profile
-
-                  // Uint8List photoBytes = await File(profileImagePath!).readAsBytes();
-                  // String base64Image = base64Encode(photoBytes);
                   try {
                     if (profileImagePath != null &&
                         File(profileImagePath!).existsSync()) {
@@ -182,7 +178,6 @@ class _AdminSettingPageState extends State<AdminSettingPage> {
                               newPasswordController.text,
                               profileImagePath,
                               base64Image);
-                      // Show a success message or navigate back
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Profile updated successfully'),
@@ -191,13 +186,11 @@ class _AdminSettingPageState extends State<AdminSettingPage> {
                       );
                       // Pass the updated profileImagePath back to AdminPage
                       widget.updateProfileImageCallback(profileImagePath);
-                      Navigator.pop(context); // Close the settings page
+                      Navigator.pop(context); 
                     } else {
-                      // Handle the case where profileImagePath is null or file doesn't exist
                       print('Invalid profile image path');
                     }
                   } catch (error) {
-                    // Handle errors, show an error message, etc.
                     print('Error updating profile: $error');
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

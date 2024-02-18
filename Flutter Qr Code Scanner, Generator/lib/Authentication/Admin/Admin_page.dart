@@ -1,7 +1,7 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'AdminService.dart';
 import 'Admin_Drawer/Adminsetting_page.dart';
 import 'package:intl/intl.dart';
@@ -20,15 +20,27 @@ class _AdminPageState extends State<AdminPage> {
   @override
   void initState() {
     super.initState();
-    // Fetch all users when the widget is initialized
+     loadProfileImage();
     fetchAllUsers();
   }
 
-  // Callback function to update the profile image
   void updateProfileImage(String? imagePath) {
     setState(() {
       profileImagePath = imagePath;
+      saveProfileImage(imagePath);
     });
+  }
+
+   Future<void> loadProfileImage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? imagePath = prefs.getString('profileImagePath');
+    setState(() {
+      profileImagePath = imagePath;
+    });
+  }
+  Future<void> saveProfileImage(String? imagePath) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.setString('profileImagePath', imagePath ?? '');
   }
 
   Future<void> _refreshUsers() async {
@@ -46,13 +58,13 @@ class _AdminPageState extends State<AdminPage> {
           actions: [
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(true); // User confirmed deletion
+                Navigator.of(context).pop(true);
               },
               child: Text('Yes'),
             ),
             TextButton(
               onPressed: () {
-                Navigator.of(context).pop(false); // User canceled deletion
+                Navigator.of(context).pop(false);
               },
               child: Text('No'),
             ),
@@ -85,17 +97,66 @@ class _AdminPageState extends State<AdminPage> {
     }
   }
 
+  void _upgradeUserToAdmin(String userId, String username) async {
+    bool confirmed = await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Confirm User Upgrade'),
+          content: Text(
+            'Are you sure you want to upgrade $username to an admin?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(true); 
+              },
+              child: Text('Yes'),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: Text('No'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      try {
+        await Provider.of<AdminService>(context, listen: false)
+            .upgradeUserToAdmin(userId);
+        await fetchAllUsers();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('User upgraded to admin successfully'),
+            backgroundColor: Color.fromARGB(255, 0, 128, 0),
+          ),
+        );
+      } catch (error) {
+        print('Error upgrading user to admin: $error');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to upgrade user to admin. $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> fetchAllUsers() async {
     List<User> users =
         await Provider.of<AdminService>(context, listen: false).getAllUsers();
     setState(() {
       allUsers = users;
-      filterUsers(); // Initial filter based on empty query
+      filterUsers(); // initial filter searc based on empty searching
     });
   }
 
   void filterUsers() {
-    // Filter users based on searchQuery
     filteredUsers = searchQuery.isEmpty
         ? List.from(allUsers)
         : allUsers
@@ -116,7 +177,7 @@ class _AdminPageState extends State<AdminPage> {
       appBar: AppBar(
         title: Text('Admin Dashboard'),
         actions: [
-          // Display the profile image in the app bar
+          // update profile image in the app bar when the one in settings gets updated
           GestureDetector(
             onTap: () async {
               var updatedImagePath = await Navigator.push(
@@ -144,60 +205,87 @@ class _AdminPageState extends State<AdminPage> {
         ],
       ),
       drawer: Drawer(
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                children: [
-                  ListTile(
-                    title: Text('Home'),
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
+        child: Container(
+          // color:  Color.fromARGB(222, 37, 10, 105),
+          color: Color.fromARGB(183, 19, 2, 58),
+          child: Column(
+            children: [
+              Container(
+                height: 150,
+                decoration: BoxDecoration(
+                  color: Colors.white, 
+                  image: DecorationImage(
+                    image: AssetImage(
+                        'images/appicon.png'),
+                    fit: BoxFit.cover,
                   ),
-                  ListTile(
-                    title: Text('Settings'),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => AdminSettingPage(
-                            updateProfileImageCallback: updateProfileImage,
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                ),
               ),
-            ),
-            Divider(),
-            Container(
-              padding: EdgeInsets.all(16.0),
-              child: InkWell(
-                onTap: () {
-                  Navigator.pushReplacementNamed(context, '/Login');
-                },
-                child: Container(
-                  padding:
-                      EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                  decoration: BoxDecoration(
-                    color: Color.fromARGB(255, 255, 255, 255),
-                    borderRadius: BorderRadius.circular(10.0),
-                    border: Border.all(
-                        color: Color.fromARGB(222, 207, 187, 253), width: 1.6),
-                  ),
-                  child: Text(
-                    'Logout',
-                    style: TextStyle(
-                      color: Color.fromARGB(255, 0, 0, 0),
-                      fontWeight: FontWeight.bold,
+              Expanded(
+                child: ListView(
+                  children: [
+                    ListTile(
+                      leading: Icon(Icons.home, color: Colors.white),
+                      title: Text(
+                        'Home',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      onTap: () {
+                        Navigator.pop(context);
+                      },
+                    ),
+                    ListTile(
+                      leading: Icon(Icons.settings, color: Colors.white),
+                      title: Text(
+                        'Settings',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AdminSettingPage(
+                              updateProfileImageCallback: updateProfileImage,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Divider(
+                color: Colors.white, // Divider color
+                thickness: 1.0,
+                indent: 16.0,
+                endIndent: 16.0,
+              ),
+              Container(
+                padding: EdgeInsets.all(16.0),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.pushReplacementNamed(context, '/Login');
+                  },
+                  child: Container(
+                    padding:
+                        EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10.0),
+                      border: Border.all(color: Colors.blueGrey, width: 1.6),
+                    ),
+                    child: Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: Color.fromARGB(222, 37, 10, 105),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
       body: Column(
@@ -208,7 +296,7 @@ class _AdminPageState extends State<AdminPage> {
               onChanged: (value) {
                 setState(() {
                   searchQuery = value;
-                  filterUsers(); // Update the filtered list on each change
+                  filterUsers(); 
                 });
               },
               decoration: InputDecoration(
@@ -236,25 +324,54 @@ class _AdminPageState extends State<AdminPage> {
                     ),
                     itemCount: filteredUsers.length,
                     itemBuilder: (context, index) {
+                      final user = filteredUsers[index];
+
+                      // Check if the users nname starts with "admin_" or the role is "Admin"
+                      final bool isAdminUser =
+                          user.username.startsWith("admin_") ||
+                              user.role.toLowerCase() == "admin";
+
                       return ListTile(
-                        title: Text(filteredUsers[index].username),
+                        title: Text(user.username),
                         subtitle: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('Email: ${filteredUsers[index].emailAddress}'),
-                            Text('Role: ${filteredUsers[index].role}'),
+                            Text('Email: ${user.emailAddress}'),
+                            Text('Role: ${user.role}'),
                             Text(
-                                'Created Date: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(filteredUsers[index].createdDate)}'),
+                              'Created Date: ${DateFormat('yyyy-MM-dd HH:mm:ss').format(user.createdDate)}',
+                            ),
                           ],
                         ),
-                        trailing: IconButton(
-                          icon: Icon(
-                            Icons.delete,
-                            color: const Color.fromARGB(255, 117, 34, 28),
-                          ),
-                          onPressed: () {
-                            _deleteUser(filteredUsers[index].id);
-                          },
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                Icons.delete,
+                                color: isAdminUser
+                                    ? Colors.grey
+                                    : const Color.fromARGB(255, 117, 34, 28),
+                              ),
+                              onPressed: isAdminUser
+                                  ? null
+                                  : () {
+                                      _deleteUser(user.id);
+                                    },
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.move_up_sharp,
+                                color: isAdminUser ? Colors.grey : Colors.green,
+                              ),
+                              onPressed: isAdminUser
+                                  ? null
+                                  : () {
+                                      _upgradeUserToAdmin(
+                                          user.id, user.username);
+                                    },
+                            ),
+                          ],
                         ),
                       );
                     },

@@ -12,7 +12,11 @@ import 'ProfileService.dart';
 class SettingsPage extends StatefulWidget {
   final Function(String?) updateProfileImageCallback;
 
-  SettingsPage({Key? key, required this.updateProfileImageCallback})
+  SettingsPage(
+      {Key? key,
+      required this.updateProfileImageCallback,
+      required Future<void> Function(String newUsername)
+          updateUsernameCallback})
       : super(key: key);
 
   @override
@@ -38,6 +42,7 @@ class _SettingsPageState extends State<SettingsPage> {
       setState(() {
         profileImagePath = pickedFile.path;
       });
+      widget.updateProfileImageCallback(profileImagePath);
     }
   }
 
@@ -48,7 +53,7 @@ class _SettingsPageState extends State<SettingsPage> {
         IconButton(
             icon: SvgPicture.asset(
               'svg/white.svg',
-              height: 24.0, // Adjust the height as needed
+              height: 24.0,
             ),
             onPressed: () {
               Navigator.pushReplacementNamed(context, '/MainQR');
@@ -175,9 +180,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   print('New Password: ${newPasswordController.text}');
                   print('Confirm Password: ${confirmPasswordController.text}');
                   print('Profile Image Path: $profileImagePath');
-
-                  // Uint8List photoBytes = await File(profileImagePath!).readAsBytes();
-                  // String base64Image = base64Encode(photoBytes);
                   try {
                     if (profileImagePath != null &&
                         File(profileImagePath!).existsSync()) {
@@ -192,22 +194,20 @@ class _SettingsPageState extends State<SettingsPage> {
                               newPasswordController.text,
                               profileImagePath,
                               base64Image);
-                      // Show a success message or navigate back
+                      //sucess snack
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text('Profile updated successfully'),
                           backgroundColor: Color.fromARGB(255, 57, 106, 59),
                         ),
                       );
-                      // Pass the updated profileImagePath back to User[age
+                      // Pass the updated image path back to User[age
                       widget.updateProfileImageCallback(profileImagePath);
                       Navigator.pop(context); // Close the settings page
                     } else {
-                      // Handle the case where profileImagePath is null or file doesn't exist
                       print('Invalid profile image path');
                     }
                   } catch (error) {
-                    // Handle errors, show an error message, etc.
                     print('Error updating profile: $error');
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(

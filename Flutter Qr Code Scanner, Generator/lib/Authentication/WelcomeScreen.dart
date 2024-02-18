@@ -42,15 +42,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             children: [
               Padding(
               padding: const EdgeInsets.all(8.0), // Add padding
-              // child: TextButton(
-              //   onPressed: () {
-              //     _pageController.jumpToPage(1); // Skip to the third page
-              //   },
-              //   child: Text(
-              //     'Skip',
-              //     style: TextStyle(color: Colors.white),
-              //   ),
-              // ),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0), // Add padding

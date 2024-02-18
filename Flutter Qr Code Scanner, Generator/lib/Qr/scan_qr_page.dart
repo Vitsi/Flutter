@@ -85,10 +85,6 @@ class QRViewWidgetState extends State<QRViewWidget> {
                       onPressed: () => scanQR(),
                       child: const Text('Start QR scan'),
                     ),
-                    OutlinedButton(
-                      onPressed: () => scanFromGallery(),
-                      child: const Text('Scan from Gallery'),
-                    ),
                   ],
                 ),
                 SizedBox(height: 160),
@@ -98,7 +94,6 @@ class QRViewWidgetState extends State<QRViewWidget> {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                      
                         Container(
                           padding: const EdgeInsets.all(8.0),
                           decoration: BoxDecoration(
@@ -152,10 +147,6 @@ class QRViewWidgetState extends State<QRViewWidget> {
         await _picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
-      // You need to handle the image here, for example, by displaying it.
-      // You can use the pickedFile.path to get the file path.
-
-      // Now, let's scan the barcode from the picked image.
       String barcodeScanRes;
       try {
         barcodeScanRes = await FlutterBarcodeScanner.scanBarcode(
@@ -163,7 +154,6 @@ class QRViewWidgetState extends State<QRViewWidget> {
           'Cancel',
           true,
           ScanMode.DEFAULT,
-          //path: pickedFile.path,
         );
         debugPrint(barcodeScanRes);
       } on PlatformException {

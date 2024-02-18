@@ -13,14 +13,8 @@ class QrCodeService {
   Future<void> sendQRCode(BuildContext context, String data) async {
     final apiUrl = '$baseUrl/QRCode';
 
-    //String? userId = Provider.of<ProfileService>(context, listen: false).userId;
     String? userToken =
         Provider.of<ProfileService>(context, listen: false).userAccessToken;
-    // Handle the case where userId or userToken is null
-    //if (userId == null || userToken == null) {
-     // print('User ID or Token is null. Cannot send QR Code.');
-     // return;
-    //}
 
     // Make a POST request to save the QR code
     Map<String, dynamic> requestData = {
@@ -29,11 +23,9 @@ class QrCodeService {
       //'UserId': userId,
       'UserToken': userToken,
     };
-
-    // Print the data to be sent
+    //to seee the sata being requested in console 
     print('Sending QR Code data to backend: $requestData');
 
-    // Make a POST request to save the QR code
     await http.post(
       Uri.parse(apiUrl),
       body: json.encode(requestData),
@@ -44,12 +36,26 @@ class QrCodeService {
     );
   }
 
-  Future<List<Qr>> getSavedQRCodes() async {
-    
+  Future<List<Qr>> getSavedQRCodes(BuildContext context) async {
     final apiUrl = '$baseUrl/QRCode';
 
-    // Make a GET request to retrieve saved QR codes
-    final response = await http.get(Uri.parse(apiUrl));
+    String? userId = Provider.of<ProfileService>(context, listen: false).userId;
+    String? userToken =
+        Provider.of<ProfileService>(context, listen: false).userAccessToken;
+
+    if (userId == null || userToken == null) {
+      print('User ID or Token is null. Cannot fetch QR Codes.');
+      return [];
+    }
+
+    // Add the user ID to the API request
+    final response = await http.get(
+      Uri.parse('$apiUrl?userId=$userId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $userToken',
+      },
+    );
 
     if (response.statusCode == 200) {
       // Parse the JSON response
@@ -57,11 +63,12 @@ class QrCodeService {
       return jsonList.map((json) => Qr.fromJson(json)).toList();
     } else {
       print('Failed to load QR codes. Status Code: ${response.statusCode}');
-      return []; // Return an empty list or handle it based on your requirements
+      return [];
     }
   }
+
   Future<void> deleteQrCode(context, String id) async {
-        String? userToken =
+    String? userToken =
         Provider.of<ProfileService>(context, listen: false).userAccessToken;
 
     final apiUrl = '$baseUrl/QRCode/$id';
@@ -76,7 +83,6 @@ class QrCodeService {
     );
   }
   
-
   clearAllQRCodes() {}
 }
 
@@ -103,5 +109,3 @@ class Qr {
   }
 }
 
-// Usage example:
-// Qr qrCode = Qr.fromJson(jsonData);

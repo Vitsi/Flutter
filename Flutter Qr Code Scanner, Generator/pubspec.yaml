@@ -39,7 +39,6 @@ dependencies:
   provider: 
   qr_code_scanner: ^1.0.1
   url_launcher: 
-  shared_preferences: ^2.0.12 
   curved_navigation_bar:
   image:
   qr_flutter: ^4.0.0
@@ -55,6 +54,9 @@ dependencies:
   image_gallery_saver:
   barcode_widget:
   flutter_secure_storage: ^4.0.0
+  shared_preferences:
+  floating_bubbles:
+  particles_fly:
   
 dev_dependencies:
   flutter_test:

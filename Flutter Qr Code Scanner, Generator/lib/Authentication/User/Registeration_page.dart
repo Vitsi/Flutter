@@ -5,11 +5,12 @@ import 'package:provider/provider.dart';
 
 import '../AuthService.dart';
 
-//!TO DO: empty element can register validte for that
 class RegisterScreen extends StatelessWidget {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+
+  final _formKey = GlobalKey<FormState>();
 
   String? _validateEmail(String value) {
     if (value.isEmpty) {
@@ -37,7 +38,7 @@ class RegisterScreen extends StatelessWidget {
         IconButton(
             icon: SvgPicture.asset(
               'svg/white.svg',
-              height: 24.0, // Adjust the height as needed
+              height: 24.0,
             ),
             onPressed: () {
               Navigator.pushReplacementNamed(context, '/Login');
@@ -51,7 +52,7 @@ class RegisterScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Form(
           autovalidateMode: AutovalidateMode.onUserInteraction,
-          //key: _formKey,
+          key: _formKey,
           child: SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -84,36 +85,37 @@ class RegisterScreen extends StatelessWidget {
                 SizedBox(height: 16.0),
                 ElevatedButton(
                   onPressed: () async {
-                    final emailAdress = _emailController.text.trim();
-                    final username = _usernameController.text.trim();
-                    final password = _passwordController.text.trim();
+                    if (_formKey.currentState!.validate()) {
+                      final emailAdress = _emailController.text.trim();
+                      final username = _usernameController.text.trim();
+                      final password = _passwordController.text.trim();
 
-                    final authService =
-                        Provider.of<AuthService>(context, listen: false);
+                      final authService =
+                          Provider.of<AuthService>(context, listen: false);
 
-                    if (username.startsWith("admin_")) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text(
-                            "admin_ is a keyword reserved for admin, choose another username"),
-                        backgroundColor: Colors.red,
-                      ));
-                    } else {
-                      final registrationResult = await authService.register(
-                        username,
-                        emailAdress,
-                        password,
-                      );
-
-                      if (registrationResult) {
-                        // Registration successful
-                        Navigator.pushReplacementNamed(context, '/Login');
-                      } else {
-                        // Registration failed (user already exists or other issues)
+                      if (username.startsWith("admin_")) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                           content: Text(
-                              "User already exists or registration failed."),
+                              "admin_ is a keyword reserved for admin, choose another username"),
                           backgroundColor: Colors.red,
                         ));
+                      } else {
+                        final registrationResult = await authService.register(
+                          username,
+                          emailAdress,
+                          password,
+                        );
+
+                        if (registrationResult) {
+                          Navigator.pushReplacementNamed(context, '/Login');
+                        } else {
+                          // Registration failed (user already exists .. maybe other issues )
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(
+                                "User already exists or registration failed."),
+                            backgroundColor: Colors.red,
+                          ));
+                        }
                       }
                     }
                   },

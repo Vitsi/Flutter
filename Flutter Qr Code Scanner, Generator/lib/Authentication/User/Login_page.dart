@@ -6,11 +6,16 @@ import 'package:provider/provider.dart';
 import '../AuthService.dart';
 import 'Registeration_page.dart';
 
- //!TO DO: backend passwordx email , username verification
-class LoginScreen extends StatelessWidget {
-  // Controller for text fields
+class LoginScreen extends StatefulWidget {
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+
+  String? _errorMessage;
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +25,7 @@ class LoginScreen extends StatelessWidget {
           IconButton(
             icon: SvgPicture.asset(
               'svg/white.svg',
-              height: 24.0, // Adjust the height as needed
+              height: 24.0, 
             ),
             onPressed: () { 
               Navigator.pushReplacementNamed(context, '/Welcome');
@@ -38,7 +43,7 @@ class LoginScreen extends StatelessWidget {
                SvgPicture.asset(
                 'svg/login.svg',
                 height: 200.0,
-              ),
+              ),              
               // Username input
               SizedBox(height: 16.0),
               TextField(
@@ -52,6 +57,11 @@ class LoginScreen extends StatelessWidget {
                 obscureText: true,
                 decoration: InputDecoration(labelText: 'Password'),
               ),
+              if (_errorMessage != null)
+                Text(
+                  _errorMessage!,
+                  style: TextStyle(color: Colors.red),
+                ),
               SizedBox(height: 16.0),
               ElevatedButton(
                 onPressed: () async {
@@ -71,7 +81,10 @@ class LoginScreen extends StatelessWidget {
                     if (userToken != null) {
                       Navigator.pushReplacementNamed(context, '/MainQR');
                     } else {
-                      SnackBar(content: Text('Login failed'));
+                     setState(() {
+                        // Set error message based on the response from AuthService
+                        _errorMessage = 'Login failed. Invalid username or password.';
+                      });
                     }
                   }
                 },

@@ -10,7 +10,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'QrCodeService.dart';
 
-
 class GenerateQRCode extends StatelessWidget {
   final TextEditingController _textController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -24,7 +23,7 @@ class GenerateQRCode extends StatelessWidget {
         IconButton(
             icon: SvgPicture.asset(
               'svg/white.svg',
-              height: 24.0, // Adjust the height as needed
+              height: 24.0,
             ),
             onPressed: () {
               Navigator.pushReplacementNamed(context, '/MainQR');
@@ -36,7 +35,7 @@ class GenerateQRCode extends StatelessWidget {
       ]),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child:  ListView(
+        child: ListView(
           shrinkWrap: true,
           physics: NeverScrollableScrollPhysics(),
           //mainAxisAlignment: MainAxisAlignment.center,
@@ -124,11 +123,9 @@ class DisplayQRCode extends StatelessWidget {
           switch (index) {
             case 0:
               _copyToClipboard(data);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                   content: Text('Copied'),
-                ),
-              );
+                  backgroundColor: Color.fromARGB(230, 52, 7, 83)));
               break;
             case 1:
               await _saveQRCode(data, context);
@@ -152,36 +149,64 @@ class DisplayQRCode extends StatelessWidget {
     Clipboard.setData(ClipboardData(text: text));
   }
 
-  void _launchURL(String url, BuildContext context) async {
+  void _launchURL(String combinedData, BuildContext context) async {
+    // Extract the URL from the combined data
+    String url = _extractUrl(combinedData);
+
     if (await canLaunch(url)) {
       await launch(url);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('The generated code is not a URL format'),
-      ));
+          content: Text('Failed to launch URL: $url'),
+          backgroundColor: Color.fromARGB(230, 83, 7, 36)));
     }
+  }
+
+  String _extractUrl(String combinedData) {
+    // Split the combined data into lines
+    List<String> lines = combinedData.split('\n');
+    for (String line in lines) {
+      // Check if the line contains  other so it could remove it
+      if (line.contains('Other:') &&
+          (line.contains('http://') ||
+              line.contains('https://') ||
+              line.contains('www.'))) {
+        List<String> parts = line.split('Other:');
+        if (parts.length > 1) {
+          return parts[1].trim();
+        }
+      }
+    }
+    return 'No link to launch';
   }
 
   Future<void> _saveQRCode(String data, BuildContext context) async {
     try {
-      // Get the QrCodeService instance from the provider
       QrCodeService qrCodeService =
           Provider.of<QrCodeService>(context, listen: false);
 
-      // Call the sendQRCode method to save the QR code
-      await qrCodeService.sendQRCode(context, data);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('QR Code saved successfully'),
-        ),
-      );
+      List<Qr> savedQRCodes = await qrCodeService.getSavedQRCodes(context);
+      if (savedQRCodes.any((qr) => qr.data == data)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('QR Code already saved'),
+              backgroundColor: Color.fromARGB(230, 52, 7, 83)),
+        );
+      } else {
+        await qrCodeService.sendQRCode(context, data);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text('QR Code saved successfully'),
+              backgroundColor: Color.fromARGB(230, 7, 83, 22)),
+        );
+      }
     } catch (e) {
       // Handle errors
       print('Error saving QR Code: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to save QR Code'),
-        ),
+            content: Text('Failed to save QR Code'),
+            backgroundColor: Color.fromARGB(230, 83, 7, 36)),
       );
     }
   }
@@ -193,9 +218,9 @@ class DisplayQRCode extends StatelessWidget {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text('Invalid phone number format. Enter a valid phone number.'),
-        ),
+            content: Text(
+                'Invalid phone number format. Enter a valid phone number.'),
+            backgroundColor: Color.fromARGB(230, 52, 7, 83)),
       );
     }
   }
@@ -205,16 +230,15 @@ class DisplayQRCode extends StatelessWidget {
     final RegExp ethiopianPhoneNumberRegExp = RegExp(
         r'(\+\s*2\s*5\s*1\s*9\s*(([0-9]\s*){8}\s*))|(0\s*9\s*(([0-9]\s*){8}))');
 
-    // Check if the phone number matches the regular expression
     if (!ethiopianPhoneNumberRegExp.hasMatch(phoneNumber)) {
       return false;
     }
-
-    // Check if the length of the phone number is at most 10 digits
     return phoneNumber.replaceAll(RegExp(r'[^\d]'), '').length <= 10;
   }
 
-  void _launchEmail(String email, BuildContext context) async {
+  void _launchEmail(String combinedData, BuildContext context) async {
+    String email = _extractEmail(combinedData);
+
     if (_isValidEmail(email)) {
       final Uri _emailLaunchUri = Uri(scheme: 'mailto', path: email);
       await launch(_emailLaunchUri.toString());
@@ -222,25 +246,38 @@ class DisplayQRCode extends StatelessWidget {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Invalid email format. Enter a valid email address.'),
+          backgroundColor: Color.fromARGB(230, 52, 7, 83),
         ),
       );
     }
   }
 
+  String _extractEmail(String combinedData) {
+    List<String> lines = combinedData.split('\n');
+
+    for (String line in lines) {
+      if (line.contains('Email:')) {
+        // Split the line by 'Email:' to get the part after it
+        List<String> parts = line.split('Email:');
+        if (parts.length > 1) {
+          return parts[1].trim();
+        }
+      }
+    }
+    return 'No valid email';
+  }
+
   bool _isValidEmail(String email) {
-    // Trim leading and trailing spaces
     email = email.trim();
 
     if (email.isEmpty) {
-      return false; // Empty email is considered invalid
+      return false;
     }
 
     final RegExp emailRegExp = RegExp(
-      // r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-      r'',
+      r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
     );
 
-    // Check if the email matches the regular expression
     return emailRegExp.hasMatch(email);
   }
 }

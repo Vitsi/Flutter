@@ -185,6 +185,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.3+1"
+  floating_bubbles:
+    dependency: "direct main"
+    description:
+      name: floating_bubbles
+      sha256: "4f39efc44eb5777861e346aa747950b605c2ba538ec0c67e9a2219330191f533"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.6.2"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -400,6 +408,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  particles_fly:
+    dependency: "direct main"
+    description:
+      name: particles_fly
+      sha256: "77a0eb6e8423724438505f66e1534e3ba3e055cf9be784f22dce6fd142afc428"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.8"
   path:
     dependency: transitive
     description:
@@ -576,6 +592,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.0"
+  sa4_migration_kit:
+    dependency: transitive
+    description:
+      name: sa4_migration_kit
+      sha256: "635df6de79b8b396705a630ba2d7bc7a2a1df4f69b4bfc10aa104290f6fdca85"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   screenshot:
     dependency: "direct main"
     description:
@@ -640,6 +664,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.2"
+  simple_animations:
+    dependency: transitive
+    description:
+      name: simple_animations
+      sha256: "1ea7b93fb98e2a611b6865d632de55607b766328d14700143353129ee0559d3a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "5.0.2"
   sky_engine:
     dependency: transitive
     description: flutter

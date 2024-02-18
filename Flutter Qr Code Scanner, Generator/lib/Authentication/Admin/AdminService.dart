@@ -46,6 +46,26 @@ class AdminService {
     }
   }
 
+  Future<void> upgradeUserToAdmin(String userId) async {
+    if (adminAccessToken == null) {
+      throw Exception('Admin access token not available');
+    }
+
+    final response = await http.put(
+      Uri.parse('$baseUrl/Useraccount/UpgradeToAdmin/$userId'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $adminAccessToken',
+      },
+    );
+
+    print('Upgrade User To Admin Response Status Code: ${response.statusCode}');
+
+    if (response.statusCode != 204) {
+      throw Exception('Failed to upgrade user to admin');
+    }
+  }
+
   Future<void> deleteUser(String userId) async {
     if (adminAccessToken == null) {
       throw Exception('Admin access token not available');
@@ -84,20 +104,16 @@ class AdminService {
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       //*filtering admins out so later on admin doesnt delete admin in the dashboard
-      final filteredUsers =
-          data.where((json) => json['role'] != 'Admin').toList();
-      return filteredUsers.map((json) => User.fromJson(json)).toList();
+      //final filteredUsers = data.where((json) => json['role'] !='Admin').toList();
+     // return filteredUsers.map((json) => User.fromJson(json)).toList();
+      return data.map((json) => User.fromJson(json)).toList();
     } else {
       throw Exception('Failed to get users');
     }
   }
 
-  Future<void> updateAdminProfile(
-      String newUsername,
-      String newEmail,
-      String newPassword,
-      String? profileImagePath,
-       String? base64Image) async {
+  Future<void> updateAdminProfile(String newUsername, String newEmail,
+      String newPassword, String? profileImagePath, String? base64Image) async {
     if (adminAccessToken == null || adminId == null) {
       throw Exception('Admin access token not available');
     }
@@ -107,18 +123,15 @@ class AdminService {
       Uri.parse('$baseUrl/Useraccount/${adminId}'),
     );
 
-    // Add the image file if profileImagePath is not null
     if (profileImagePath != null) {
       var profileImage =
           await http.MultipartFile.fromPath('profileImage', profileImagePath);
       request.files.add(profileImage);
     }
-    //edd base64 encoded image
-  if (base64Image != null) {
-    var photoFile = http.MultipartFile.fromString('Photo', base64Image);
-    request.files.add(photoFile);
-  }
-
+    if (base64Image != null) {
+      var photoFile = http.MultipartFile.fromString('Photo', base64Image);
+      request.files.add(photoFile);
+    }
 
     request.headers['Content-Type'] = 'application/json';
     request.headers['Authorization'] = 'Bearer $adminAccessToken';

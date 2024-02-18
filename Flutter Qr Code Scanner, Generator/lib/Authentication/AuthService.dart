@@ -5,6 +5,7 @@ import 'package:QR_Code_Studio/Qr/drawer/ProfileService.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'Admin/AdminService.dart';
 
@@ -15,10 +16,10 @@ class AuthService {
   AuthService(this.baseUrl);
 
   Future<String?> login(
-  BuildContext context,
-  String username,
-  String password,
-) async {
+    BuildContext context,
+    String username,
+    String password,
+  ) async {
     final response = await http.post(
       Uri.parse('$baseUrl/Login'),
       headers: {
@@ -37,14 +38,15 @@ class AuthService {
       final Map<String, dynamic> data = jsonDecode(response.body);
       final userToken = data['token'];
       final userId = data['id'];
+      
       // Set user token and ID in ProfileService
 
-       // Handle the case where userId is null
+      // Handle the case where userId is null
       if (userId == null) {
         print('User ID is null after login.');
         return null;
       }
-      
+
       Provider.of<ProfileService>(context, listen: false).userAccessToken =
           userToken;
       Provider.of<ProfileService>(context, listen: false).userId = userId;
@@ -76,7 +78,7 @@ class AuthService {
       final Map<String, dynamic> data = jsonDecode(response.body);
       final adminToken = data['token'];
       final adminId = data['id'];
-
+    
       // Set admin token and ID in AdminService
       Provider.of<AdminService>(context, listen: false).adminAccessToken =
           adminToken;
@@ -87,7 +89,6 @@ class AuthService {
       return null;
     }
   }
-
 
   Future<bool> register(
       String username, String emailAddress, String password) async {
